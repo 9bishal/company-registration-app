@@ -1,4 +1,4 @@
-//r0teqs.jsx
+//routes.jsx - Application routing configuration
 import { createBrowserRouter } from 'react-router-dom'
 import Layout from './components/Layout'
 import Login from './pages/Login'

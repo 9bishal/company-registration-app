@@ -10,8 +10,7 @@ export const registerUser = createAsyncThunk(
         // Send user data to backend /register API
       const response = await authAPI.register(userData) //userData → form data from user (email, password, etc.)
       // On success, return data (goes to Redux state)
-      // API returns { success, data: { user, token } }
-      return response.data.data
+      return response.data
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Registration failed')
     }
@@ -23,23 +22,18 @@ export const loginUser = createAsyncThunk(
   'auth/login', //-> this is just label, later it will be called as auth/login/pending, auth/login/fulfilled, auth/login/rejected
   async (credentials, { rejectWithValue }) => {
     try { 
-      console.log('Login credentials:', credentials) // Debug log
       const response = await authAPI.login(credentials) //credentials → form data from user (email, password, etc.)
-      console.log('Login response:', response.data) // Debug log
-      
       // Store token and user data in localStorage
-      // API returns { success, data: { user, token } }
-      localStorage.setItem('token', response.data.data.token)
-      localStorage.setItem('user', JSON.stringify(response.data.data.user))
+      localStorage.setItem('token', response.data.token)
+      localStorage.setItem('user', JSON.stringify(response.data.user))
     //       This means:
     // User stays logged in even after page refresh
     // Token can be used for protected API calls
     // 📌 localStorage = browser memory (persists after reload)
 
 
-      return response.data.data
+      return response.data
     } catch (error) {
-      console.log('Login error:', error.response?.data) // Debug log
       return rejectWithValue(error.response?.data?.message || 'Login failed')
     }
   }

@@ -1,10 +1,15 @@
+// Register.jsx - User registration page for company account creation
 import { useState } from 'react'
-import { TextField, Button, Box, Typography, Radio, RadioGroup, FormControlLabel } from '@mui/material'
+import { 
+  TextField, Button, Box, Typography, Alert, CircularProgress, 
+  RadioGroup, FormControlLabel, Radio 
+} from '@mui/material'
 import { useNavigate } from 'react-router-dom'
+import { authAPI } from '../api/authAPI'
 
 export default function Register() {
   const navigate = useNavigate()
-  const [form, setForm] = useState({
+  const [formData, setFormData] = useState({
     name: '',
     phone: '',
     email: '',
@@ -12,77 +17,181 @@ export default function Register() {
     password: '',
     confirm: ''
   })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
-  const handleSubmit = () => {
-    navigate('/verify-mobile')
+  // Validate form inputs
+  const validateForm = () => {
+    if (!formData.name || !formData.phone || !formData.email || !formData.password) {
+      setError('Please fill in all required fields')
+      return false
+    }
+    if (formData.password !== formData.confirm) {
+      setError('Passwords do not match')
+      return false
+    }
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters')
+      return false
+    }
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      setError('Please enter a valid email address')
+      return false
+    }
+    return true
+  }
+
+  // Handle form submission
+  const handleRegister = async (e) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+
+    if (!validateForm()) return
+
+    setLoading(true)
+    try {
+      // Convert gender to M/F format
+      const genderMap = { 'Male': 'M', 'Female': 'F', 'Other': 'M' }
+      
+      // Register user with backend
+      const response = await authAPI.register({
+        email: formData.email,
+        password: formData.password,
+        full_name: formData.name,
+        gender: genderMap[formData.gender] || 'M',
+        mobile_no: formData.phone
+      })
+
+      console.log('Registration successful:', response.data)
+      const { token, user } = response.data.data
+
+      // Store token and user info in localStorage
+      localStorage.setItem('token', token)
+      localStorage.setItem('user', JSON.stringify(user))
+
+      setSuccess('✅ Registration successful! Verification email sent.')
+      
+      // Redirect after success
+      setTimeout(() => {
+        navigate('/verify-mobile', { state: { phone: formData.phone, email: formData.email } })
+      }, 2000)
+
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || err.message || 'Registration failed'
+      setError(errorMsg)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Update form field
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
   }
 
   return (
-    <Box sx={{ maxWidth: 500, mx: 'auto', mt: 5, p: 3 }}>
-      <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold' }}>
-        Register as a Company
+    <Box sx={{ maxWidth: 500, mx: 'auto', mt: 5, p: 3, boxShadow: 2, borderRadius: 2 }}>
+      <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold', textAlign: 'center' }}>
+        🏢 Company Registration
       </Typography>
       
-      <TextField
-        fullWidth
-        label="Full Name"
-        value={form.name}
-        onChange={(e) => setForm({...form, name: e.target.value})}
-        sx={{ mb: 2 }}
-      />
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
       
-      <TextField
-        fullWidth
-        label="Mobile No"
-        value={form.phone}
-        onChange={(e) => setForm({...form, phone: e.target.value})}
-        sx={{ mb: 2 }}
-      />
+      <form onSubmit={handleRegister}>
+        {/* Full Name */}
+        <TextField
+          fullWidth
+          label="Full Name"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          sx={{ mb: 2 }}
+          disabled={loading}
+        />
+        
+        {/* Mobile Number */}
+        <TextField
+          fullWidth
+          label="Mobile Number"
+          name="phone"
+          value={formData.phone}
+          onChange={handleChange}
+          sx={{ mb: 2 }}
+          disabled={loading}
+        />
+        
+        {/* Email */}
+        <TextField
+          fullWidth
+          label="Company Email"
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          sx={{ mb: 2 }}
+          disabled={loading}
+        />
+        
+        {/* Gender Selection */}
+        <Typography sx={{ mb: 1, fontWeight: 500 }}>Gender</Typography>
+        <RadioGroup 
+          row 
+          name="gender"
+          value={formData.gender} 
+          onChange={handleChange}
+          sx={{ mb: 2 }}
+        >
+          <FormControlLabel value="Male" control={<Radio />} label="Male" disabled={loading} />
+          <FormControlLabel value="Female" control={<Radio />} label="Female" disabled={loading} />
+          <FormControlLabel value="Other" control={<Radio />} label="Other" disabled={loading} />
+        </RadioGroup>
+        
+        {/* Password */}
+        <TextField
+          fullWidth
+          type="password"
+          label="Password (min 8 characters)"
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
+          sx={{ mb: 2 }}
+          disabled={loading}
+        />
+        
+        {/* Confirm Password */}
+        <TextField
+          fullWidth
+          type="password"
+          label="Confirm Password"
+          name="confirm"
+          value={formData.confirm}
+          onChange={handleChange}
+          sx={{ mb: 3 }}
+          disabled={loading}
+        />
+        
+        {/* Register Button */}
+        <Button 
+          fullWidth 
+          variant="contained" 
+          type="submit"
+          disabled={loading}
+          sx={{ mb: 2 }}
+        >
+          {loading ? <CircularProgress size={24} color="inherit" /> : 'Register'}
+        </Button>
+      </form>
       
-      <TextField
-        fullWidth
-        label="Organization Email"
-        value={form.email}
-        onChange={(e) => setForm({...form, email: e.target.value})}
-        sx={{ mb: 2 }}
-      />
-      
-      <Typography sx={{ mb: 1 }}>Gender</Typography>
-      <RadioGroup row value={form.gender} onChange={(e) => setForm({...form, gender: e.target.value})}>
-        <FormControlLabel value="Male" control={<Radio />} label="Male" />
-        <FormControlLabel value="Female" control={<Radio />} label="Female" />
-        <FormControlLabel value="Other" control={<Radio />} label="Other" />
-      </RadioGroup>
-      
-      <TextField
-        fullWidth
-        type="password"
-        label="Password"
-        value={form.password}
-        onChange={(e) => setForm({...form, password: e.target.value})}
-        sx={{ mb: 2, mt: 2 }}
-      />
-      
-      <TextField
-        fullWidth
-        type="password"
-        label="Confirm Password"
-        value={form.confirm}
-        onChange={(e) => setForm({...form, confirm: e.target.value})}
-        sx={{ mb: 3 }}
-      />
-      
-      <Button 
-        fullWidth 
-        variant="contained" 
-        onClick={handleSubmit}
-        sx={{ mb: 2 }}
-      >
-        Register
-      </Button>
-      
+      {/* Login Link */}
       <Typography align="center">
-        Already have an account? <Button onClick={() => navigate('/login')}>Login</Button>
+        Already have an account? 
+        <Button onClick={() => navigate('/login')} size="small">
+          Login
+        </Button>
       </Typography>
     </Box>
   )

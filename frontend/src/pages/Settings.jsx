@@ -1,89 +1,193 @@
+// Settings.jsx - User account settings and preferences
 import { useState } from 'react'
-import { Box, Typography, TextField, Button, Paper } from '@mui/material'
-import CloudUploadIcon from '@mui/icons-material/CloudUpload'
+import { Box, Button, TextField, Typography, Card, CardContent, Alert, CircularProgress } from '@mui/material'
+import { useNavigate } from 'react-router-dom'
 
 export default function Settings() {
-  const [logo, setLogo] = useState(null)
-  const [banner, setBanner] = useState(null)
+  const navigate = useNavigate()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+
+  // User settings state
+  const [settings, setSettings] = useState({
+    email_notifications: true,
+    sms_notifications: false,
+    marketing_emails: false,
+    two_factor_enabled: false
+  })
+
+  // Password change state
+  const [passwords, setPasswords] = useState({
+    current: '',
+    new: '',
+    confirm: ''
+  })
+
+  // Update password
+  const handleChangePassword = async (e) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+
+    if (passwords.new !== passwords.confirm) {
+      setError('Passwords do not match')
+      return
+    }
+
+    if (passwords.new.length < 8) {
+      setError('Password must be at least 8 characters')
+      return
+    }
+
+    setLoading(true)
+    // Simulate API call
+    setTimeout(() => {
+      setSuccess('✅ Password changed successfully')
+      setPasswords({ current: '', new: '', confirm: '' })
+      setLoading(false)
+    }, 1000)
+  }
+
+  // Save settings
+  const handleSaveSettings = async () => {
+    setError('')
+    setLoading(true)
+
+    // Simulate API call
+    setTimeout(() => {
+      setSuccess('✅ Settings saved successfully')
+      setLoading(false)
+    }, 1000)
+  }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h6" sx={{ mb: 3 }}>Company Info</Typography>
-      
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography sx={{ mb: 2 }}>Logo & Banner Image</Typography>
-        
-        <Box sx={{ display: 'flex', gap: 3, mb: 4 }}>
-          <Box sx={{ flex: 1 }}>
-            <Typography sx={{ mb: 1 }}>Upload Logo</Typography>
-            <Box 
-              sx={{ 
-                border: '2px dashed gray', 
-                p: 3, 
-                textAlign: 'center',
-                cursor: 'pointer'
-              }}
-              onClick={() => document.getElementById('logo-upload').click()}
-            >
-              <CloudUploadIcon sx={{ fontSize: 40, color: 'gray' }} />
-              <Typography>Browse photo or drop here</Typography>
-              <Typography variant="caption">Max 5 MB</Typography>
-            </Box>
-            <input 
-              type="file" 
-              id="logo-upload" 
-              hidden 
-              onChange={(e) => setLogo(e.target.files[0])} 
+    <Box sx={{ maxWidth: 600, mx: 'auto', mt: 5, p: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+          ⚙️ Settings
+        </Typography>
+        <Button size="small" onClick={() => navigate('/dashboard')}>
+          Back
+        </Button>
+      </Box>
+
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+
+      {/* Change Password Section */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            🔐 Change Password
+          </Typography>
+
+          <form onSubmit={handleChangePassword}>
+            <TextField
+              fullWidth
+              type="password"
+              label="Current Password"
+              value={passwords.current}
+              onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
+              sx={{ mb: 2 }}
+              disabled={loading}
             />
-            {logo && <Typography sx={{ mt: 1 }}>{logo.name}</Typography>}
-          </Box>
-          
-          <Box sx={{ flex: 1 }}>
-            <Typography sx={{ mb: 1 }}>Banner Image</Typography>
-            <Box 
-              sx={{ 
-                border: '2px dashed gray', 
-                p: 3, 
-                textAlign: 'center',
-                cursor: 'pointer'
-              }}
-              onClick={() => document.getElementById('banner-upload').click()}
-            >
-              <CloudUploadIcon sx={{ fontSize: 40, color: 'gray' }} />
-              <Typography>Browse photo or drop here</Typography>
-              <Typography variant="caption">1500×400 pixels</Typography>
-            </Box>
-            <input 
-              type="file" 
-              id="banner-upload" 
-              hidden 
-              onChange={(e) => setBanner(e.target.files[0])} 
+
+            <TextField
+              fullWidth
+              type="password"
+              label="New Password (min 8 characters)"
+              value={passwords.new}
+              onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
+              sx={{ mb: 2 }}
+              disabled={loading}
             />
-            {banner && <Typography sx={{ mt: 1 }}>{banner.name}</Typography>}
+
+            <TextField
+              fullWidth
+              type="password"
+              label="Confirm New Password"
+              value={passwords.confirm}
+              onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
+              sx={{ mb: 2 }}
+              disabled={loading}
+            />
+
+            <Button
+              fullWidth
+              variant="contained"
+              type="submit"
+              disabled={loading}
+            >
+              {loading ? <CircularProgress size={24} color="inherit" /> : 'Update Password'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Notification Preferences */}
+      <Card>
+        <CardContent>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            🔔 Notification Preferences
+          </Typography>
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography>Email Notifications</Typography>
+              <Button
+                variant={settings.email_notifications ? 'contained' : 'outlined'}
+                onClick={() => setSettings({ ...settings, email_notifications: !settings.email_notifications })}
+                disabled={loading}
+              >
+                {settings.email_notifications ? 'ON' : 'OFF'}
+              </Button>
+            </Box>
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography>SMS Notifications</Typography>
+              <Button
+                variant={settings.sms_notifications ? 'contained' : 'outlined'}
+                onClick={() => setSettings({ ...settings, sms_notifications: !settings.sms_notifications })}
+                disabled={loading}
+              >
+                {settings.sms_notifications ? 'ON' : 'OFF'}
+              </Button>
+            </Box>
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography>Marketing Emails</Typography>
+              <Button
+                variant={settings.marketing_emails ? 'contained' : 'outlined'}
+                onClick={() => setSettings({ ...settings, marketing_emails: !settings.marketing_emails })}
+                disabled={loading}
+              >
+                {settings.marketing_emails ? 'ON' : 'OFF'}
+              </Button>
+            </Box>
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography>Two-Factor Authentication</Typography>
+              <Button
+                variant={settings.two_factor_enabled ? 'contained' : 'outlined'}
+                onClick={() => setSettings({ ...settings, two_factor_enabled: !settings.two_factor_enabled })}
+                disabled={loading}
+              >
+                {settings.two_factor_enabled ? 'ON' : 'OFF'}
+              </Button>
+            </Box>
           </Box>
-        </Box>
-        
-        <TextField
-          fullWidth
-          label="Company name"
-          sx={{ mb: 2 }}
-        />
-        
-        <TextField
-          fullWidth
-          multiline
-          rows={4}
-          label="About us"
-          placeholder="Write about your company..."
-          sx={{ mb: 3 }}
-        />
-        
-        <Button variant="contained">Save Changes</Button>
-      </Paper>
-      
-      <Typography align="center" variant="caption">
-        © 2021 Jobpilot - Job Board, All rights Reserved
-      </Typography>
+
+          <Button
+            fullWidth
+            variant="contained"
+            onClick={handleSaveSettings}
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Save Preferences'}
+          </Button>
+        </CardContent>
+      </Card>
     </Box>
   )
 }

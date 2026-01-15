@@ -13,6 +13,7 @@ const {
 router.post('/register', validateRegister, handleValidationErrors, authController.register); //register → Register new user
 router.post('/login', validateLogin, handleValidationErrors, authController.login); //login → Login existing user
 router.post('/verify-mobile', authMiddleware, authController.verifyMobile); //verify-mobile → Verify mobile number (protected)
+router.post('/resend-otp', authMiddleware, authController.resendOtp); //resend-otp → Resend verification code (protected)
 
 // Protected routes
 router.get('/profile', authMiddleware, authController.getProfile); //profile → Get user profile (protected)
