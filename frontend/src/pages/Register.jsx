@@ -5,10 +5,12 @@ import {
   RadioGroup, FormControlLabel, Radio 
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
-import { authAPI } from '../api/authAPI'
+import { useDispatch } from 'react-redux'
+import { registerUser } from '../store/slices/authSlice'
 
 export default function Register() {
   const navigate = useNavigate()
+  const dispatch = useDispatch()
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -27,12 +29,12 @@ export default function Register() {
       setError('Please fill in all required fields')
       return false
     }
-    if (formData.password !== formData.confirm) {
-      setError('Passwords do not match')
-      return false
-    }
     if (formData.password.length < 8) {
       setError('Password must be at least 8 characters')
+      return false
+    }
+    if (formData.password !== formData.confirm) {
+      setError('Passwords do not match')
       return false
     }
     if (!/\S+@\S+\.\S+/.test(formData.email)) {
@@ -55,31 +57,29 @@ export default function Register() {
       // Convert gender to M/F format
       const genderMap = { 'Male': 'M', 'Female': 'F', 'Other': 'M' }
       
-      // Register user with backend
-      const response = await authAPI.register({
+      // Register user with backend using Redux thunk
+      const result = await dispatch(registerUser({
         email: formData.email,
         password: formData.password,
         full_name: formData.name,
         gender: genderMap[formData.gender] || 'M',
         mobile_no: formData.phone
-      })
+      })).unwrap()
 
-      console.log('Registration successful:', response.data)
-      const { token, user } = response.data.data
-
-      // Store token and user info in localStorage
-      localStorage.setItem('token', token)
-      localStorage.setItem('user', JSON.stringify(user))
-
-      setSuccess('✅ Registration successful! Verification email sent.')
+      setSuccess('✅ Registration successful! Please verify your mobile number...')
       
-      // Redirect after success
+      // Redirect to verification page
       setTimeout(() => {
-        navigate('/verify-mobile', { state: { phone: formData.phone, email: formData.email } })
-      }, 2000)
+        navigate('/verify-mobile', { 
+          state: { 
+            email: formData.email, 
+            mobile: formData.phone 
+          } 
+        })
+      }, 1500)
 
     } catch (err) {
-      const errorMsg = err.response?.data?.message || err.message || 'Registration failed'
+      const errorMsg = err || 'Registration failed'
       setError(errorMsg)
     } finally {
       setLoading(false)
@@ -93,9 +93,9 @@ export default function Register() {
   }
 
   return (
-    <Box sx={{ maxWidth: 500, mx: 'auto', mt: 5, p: 3, boxShadow: 2, borderRadius: 2 }}>
+    <Box sx={{ maxWidth: 500, mx: 'auto', mt: { xs: 4, sm: 5 }, p: { xs: 2, sm: 3 }, boxShadow: 2, borderRadius: 2 }}>
       <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold', textAlign: 'center' }}>
-        🏢 Company Registration
+        JobPilot
       </Typography>
       
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -160,6 +160,14 @@ export default function Register() {
           onChange={handleChange}
           sx={{ mb: 2 }}
           disabled={loading}
+          error={formData.password.length > 0 && formData.password.length < 8}
+          helperText={
+            formData.password.length > 0 && formData.password.length < 8
+              ? `Password too short (${formData.password.length}/8 characters)`
+              : formData.password.length >= 8
+              ? '✅ Password meets requirements'
+              : ''
+          }
         />
         
         {/* Confirm Password */}
@@ -172,6 +180,14 @@ export default function Register() {
           onChange={handleChange}
           sx={{ mb: 3 }}
           disabled={loading}
+          error={formData.confirm.length > 0 && formData.password !== formData.confirm}
+          helperText={
+            formData.confirm.length > 0 && formData.password !== formData.confirm
+              ? '❌ Passwords do not match'
+              : formData.confirm.length > 0 && formData.password === formData.confirm
+              ? '✅ Passwords match'
+              : ''
+          }
         />
         
         {/* Register Button */}

@@ -49,11 +49,15 @@ app.get('/health', (req, res) => {
 const authRoutes=require('./routes/authRoutes');
 const companyRoutes=require('./routes/companyRoutes');
 const emailRoutes=require('./routes/emailRoutes');
+const { initializeDatabase } = require('./config/database');
 
 //use routes
 app.use('/api/auth',authRoutes);     //authRoutes → Handles authentication (login, register)
 app.use('/api/company',companyRoutes); //companyRoutes → Handles company registration
 app.use('/api/email',emailRoutes);   //emailRoutes → Handles email testing
+
+// Initialize database
+initializeDatabase().catch(err => console.error('Database initialization failed:', err));
 
 
 

@@ -2,7 +2,7 @@ const {body, validationResult}=require('express-validator');//import express-val
 
 // Registration validation rules
 exports.validateRegister = [
-  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('email').isEmail().withMessage('Valid email is required'),
   body('password')
     .isLength({ min: 8 })
     .withMessage('Password must be at least 8 characters long'),

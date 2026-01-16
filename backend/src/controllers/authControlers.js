@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 // Import PostgreSQL connection pool
-const pool = require('../config/database');
+const { pool } = require('../config/database');
 
 // Import email service
 const { sendWelcomeEmail } = require('../services/emailService');
@@ -44,7 +44,7 @@ exports.register = async (req, res) => {
     // Insert new user into database
     const newUser = await pool.query(
       `INSERT INTO users 
-       (email, password, full_name, gender, mobile_no, signup_type, otp) 
+       (email, password_hash, full_name, gender, mobile_no, signup_type, otp) 
        VALUES ($1, $2, $3, $4, $5, 'e', $6) 
        RETURNING id, email, full_name, gender, mobile_no, created_at`,
       [email, hashedPassword, full_name, gender, mobile_no, otp]
@@ -118,7 +118,7 @@ exports.login = async (req, res) => {
     const user = userResult.rows[0];
 
     // Compare entered password with hashed password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
@@ -134,7 +134,7 @@ exports.login = async (req, res) => {
     );
 
     // Remove sensitive information
-    delete user.password;
+    delete user.password_hash;
 
     res.json({
       success: true,
@@ -220,9 +220,26 @@ exports.verifyMobile = async (req, res) => {
       [userId]
     );
 
+    // Fetch updated user data
+    const updatedUser = await pool.query(
+      'SELECT id, email, full_name, gender, mobile_no, is_mobile_verified, created_at FROM users WHERE id = $1',
+      [userId]
+    );
+
+    // Generate new JWT token
+    const token = jwt.sign(
+      { userId: updatedUser.rows[0].id, email: updatedUser.rows[0].email },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRY }
+    );
+
     res.json({
       success: true,
-      message: 'Mobile number verified successfully'
+      message: 'Mobile number verified successfully',
+      data: {
+        user: updatedUser.rows[0],
+        token
+      }
     });
   } catch (error) {
     console.error('Mobile verification error:', error);

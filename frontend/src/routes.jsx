@@ -1,13 +1,35 @@
-//routes.jsx - Application routing configuration
-import { createBrowserRouter } from 'react-router-dom'
+/**
+ * routes.jsx - Application Routing Configuration
+ * 
+ * Defines all application routes and their access controls:
+ * 
+ * Public Routes (no authentication required):
+ * - /login - User login
+ * - /register - New user registration
+ * - /verify-mobile - OTP verification (requires temp token)
+ * - /forgot-password - Password reset
+ * 
+ * Protected Routes (authentication required):
+ * - /company-setup - Create/edit company profile
+ * - /dashboard - View company dashboard (requires company profile)
+ * 
+ * Route Guards:
+ * - ProtectedRoute: Checks if user is authenticated
+ * - CompanyCheck: Ensures company profile exists before accessing dashboard
+ * - RootRedirect: Smart redirect based on auth and company status
+ */
+
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
+import RootRedirect from './components/RootRedirect'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import VerifyMobile from './pages/VerifyMobile'
-import CompanySetup from './pages/CompanySetup'
-import Dashboard from './pages/Dashboard'
-import Settings from './pages/Settings'
+import ForgetPassword from './pages/ForgetPassword'
+import CompanySetupNew from './pages/CompanySetupNew'
+import DashboardEnhanced from './pages/DashboardEnhanced'
 import ProtectedRoute from './components/ProtectedRoute'
+import CompanyCheck from './components/CompanyCheck'
 
 export const router = createBrowserRouter([
   {
@@ -16,7 +38,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Login />
+        element: <RootRedirect />
       },
       {
         path: 'login',
@@ -31,10 +53,14 @@ export const router = createBrowserRouter([
         element: <VerifyMobile />
       },
       {
+        path: 'forgot-password',
+        element: <ForgetPassword />
+      },
+      {
         path: 'company-setup',
         element: (
           <ProtectedRoute>
-            <CompanySetup />
+            <CompanySetupNew />
           </ProtectedRoute>
         )
       },
@@ -42,17 +68,15 @@ export const router = createBrowserRouter([
         path: 'dashboard',
         element: (
           <ProtectedRoute>
-            <Dashboard />
+            <CompanyCheck requireCompany={true}>
+              <DashboardEnhanced />
+            </CompanyCheck>
           </ProtectedRoute>
         )
       },
       {
-        path: 'settings',
-        element: (
-          <ProtectedRoute>
-            <Settings />
-          </ProtectedRoute>
-        )
+        path: '*',
+        element: <Navigate to="/login" replace />
       }
     ]
   }

@@ -10,8 +10,20 @@ export const authAPI = {
   // Verify mobile OTP
   verifyMobile: (data) => axiosInstance.post('/auth/verify-mobile', data),
   
+  // Resend OTP
+  resendOTP: (data) => axiosInstance.post('/auth/resend-otp', data),
+  
   // Get user profile
   getProfile: () => axiosInstance.get('/auth/profile'),
+  
+  // Password reset - Request reset
+  requestPasswordReset: (data) => axiosInstance.post('/auth/forgot-password', data),
+  
+  // Password reset - Reset password with token
+  resetPassword: (data) => axiosInstance.post('/auth/reset-password', data),
+  
+  // Password reset - Verify token
+  verifyResetToken: (data) => axiosInstance.post('/auth/verify-reset-token', data),
   
   // Logout (client-side only)
   logout: () => {

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Auth State</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 { color: #333; }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #1976d2;
+        }
+        .success { border-left-color: #4caf50; }
+        .error { border-left-color: #f44336; }
+        button {
+            background: #1976d2;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1565c0; }
+        pre {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Authentication State Debugger</h1>
+        
+        <div class="section">
+            <h2>LocalStorage Data</h2>
+            <div id="localStorage"></div>
+        </div>
+        
+        <div class="section">
+            <h2>Actions</h2>
+            <button onclick="clearAuth()">Clear All Auth Data</button>
+            <button onclick="location.reload()">Refresh Page</button>
+            <button onclick="window.location.href='http://localhost:5174'">Go to App</button>
+        </div>
+        
+        <div class="section">
+            <h2>Instructions</h2>
+            <ol>
+                <li>Check if token/user exist in localStorage above</li>
+                <li>If they exist but you're not logged in → Click "Clear All Auth Data"</li>
+                <li>Then go to the app and try logging in</li>
+            </ol>
+        </div>
+    </div>
+    
+    <script>
+        function displayLocalStorage() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            let html = '<pre>';
+            html += 'Token: ' + (token ? '✅ EXISTS (' + token.substring(0, 20) + '...)' : '❌ NOT FOUND') + '\n';
+            html += 'User: ' + (user ? '✅ EXISTS\n' + JSON.stringify(JSON.parse(user), null, 2) : '❌ NOT FOUND');
+            html += '</pre>';
+            
+            document.getElementById('localStorage').innerHTML = html;
+            
+            if (token && user) {
+                document.getElementById('localStorage').parentElement.classList.add('success');
+            } else {
+                document.getElementById('localStorage').parentElement.classList.add('error');
+            }
+        }
+        
+        function clearAuth() {
+            if (confirm('Are you sure you want to clear all authentication data?')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                alert('✅ Auth data cleared! Refresh the page.');
+                displayLocalStorage();
+            }
+        }
+        
+        // Display on load
+        displayLocalStorage();
+    </script>
+</body>
+</html>

@@ -1,21 +1,21 @@
-// Login.jsx - User login page with email and password authentication
+// Login.jsx - User login page
 import { useState } from 'react'
 import { TextField, Button, Box, Typography, Alert, CircularProgress } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
-import { authAPI } from '../api/authAPI'
+import { useDispatch } from 'react-redux'
+import { loginUser } from '../store/slices/authSlice'
 
 export default function Login() {
   const navigate = useNavigate()
+  const dispatch = useDispatch()
   const [credentials, setCredentials] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Handle login submission
   const handleLogin = async (e) => {
     e.preventDefault()
     setError('')
 
-    // Validation
     if (!credentials.email || !credentials.password) {
       setError('Please fill in all fields')
       return
@@ -23,24 +23,19 @@ export default function Login() {
 
     setLoading(true)
     try {
-      const response = await authAPI.login(credentials)
-      const { token, user } = response.data.data
-
-      // Store token and user info in localStorage
-      localStorage.setItem('token', token)
-      localStorage.setItem('user', JSON.stringify(user))
-
-      // Redirect to dashboard
+      const result = await dispatch(loginUser(credentials)).unwrap()
+      
+      // Navigate to dashboard on success
       navigate('/dashboard')
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.')
+      setError(err || 'Login failed. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Box sx={{ maxWidth: 400, mx: 'auto', mt: 10, p: 3, boxShadow: 2, borderRadius: 2 }}>
+    <Box sx={{ maxWidth: 400, mx: 'auto', mt: { xs: 4, sm: 8, md: 10 }, p: { xs: 2, sm: 3 }, boxShadow: 2, borderRadius: 2 }}>
       <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold', textAlign: 'center' }}>
         🏢 Company Login
       </Typography>
@@ -48,7 +43,6 @@ export default function Login() {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       
       <form onSubmit={handleLogin}>
-        {/* Email Input */}
         <TextField
           fullWidth
           label="Email"
@@ -59,7 +53,6 @@ export default function Login() {
           disabled={loading}
         />
         
-        {/* Password Input */}
         <TextField
           fullWidth
           type="password"
@@ -70,14 +63,12 @@ export default function Login() {
           disabled={loading}
         />
         
-        {/* Forgot Password Link */}
         <Typography align="right" sx={{ mb: 3 }}>
-          <Button size="small" onClick={() => navigate('/register')}>
+          <Button size="small" onClick={() => navigate('/forgot-password')}>
             Forgot Password?
           </Button>
         </Typography>
         
-        {/* Login Button */}
         <Button 
           fullWidth 
           variant="contained" 
@@ -89,7 +80,6 @@ export default function Login() {
         </Button>
       </form>
       
-      {/* Sign Up Link */}
       <Typography align="center">
         Don't have an account? 
         <Button onClick={() => navigate('/register')} size="small">
