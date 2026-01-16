@@ -1,34 +1,18 @@
-<!-- “This is the single HTML entry point of a React SPA,
-where the entire UI is dynamically rendered inside the root div 
-by React via the main.jsx file.” -->
-
 <!doctype html>
 <html lang="en">
   <head>
-    <!-- Set character encoding -->
     <meta charset="UTF-8" />
-
-    <!-- Make app responsive on all devices -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Roboto Font for Material-UI -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 
-    <!-- Browser tab title -->
     <title>Company Registration</title>
   </head>
   <body>
-    <!-- Root element where React mounts the application -->
     <div id="root"></div>
-
-    <!-- Entry point for React application -->
-    <!-- Vite loads main.jsx as a JavaScript module -->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
-
-
-<!-- index.html
-   ↓
-main.jsx
-   ↓
-App.jsx
-   ↓
-Routes / Components / Pages -->

@@ -6,9 +6,9 @@ export const companyAPI = {
     axiosInstance.post('/company/create', companyData),
   
   // Get company profile
-  getCompany: () => 
+ getCompany: () => 
     axiosInstance.get('/company/profile'),
-  
+   
   // Update company profile
   updateCompany: (companyData) => 
     axiosInstance.put('/company/update', companyData),
